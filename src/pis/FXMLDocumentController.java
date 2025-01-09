@@ -13,6 +13,7 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
@@ -23,66 +24,71 @@ public class FXMLDocumentController {
 
     @FXML
     private TextField username;
-    
+
     @FXML
     private PasswordField password;
-    
+
     @FXML
     private Button loginBtn;
-    
+
     // Database Tools
     private Connection connect;
     private PreparedStatement prepare;
     private ResultSet result;
-    
+
     public void login() throws SQLException {
-    String sql = "SELECT * FROM admin WHERE username = ? and password = ?";
-    connect = Database.connectDb();
-    
-    try {
-        prepare = connect.prepareStatement(sql);
-        prepare.setString(1, username.getText());
-        prepare.setString(2, password.getText());
-        
-        result = prepare.executeQuery();
-        
-        Alert alert;
-        
-        if (username.getText().isEmpty() || password.getText().isEmpty()) {
-            alert = new Alert(AlertType.ERROR);
-            alert.setTitle("Error");
-            alert.setHeaderText(null);
-            alert.setContentText("Please fill in all fields");
-            alert.showAndWait();
-        } else {
-            if (result.next()) {
-                alert = new Alert(AlertType.INFORMATION);
-                alert.setTitle("Login Successful");
-                alert.setHeaderText(null);
-                alert.setContentText("Welcome!");
-                alert.showAndWait();
-                
-                // HIDE LOGIN FORM
-                Stage stage = (Stage) loginBtn.getScene().getWindow();
-                stage.close();
-                
-                // Load the next scene (dashboard)
-                Parent root = FXMLLoader.load(getClass().getResource("dashboard.fxml"));
-                Stage newStage = new Stage();
-                Scene scene = new Scene(root);
-                newStage.setScene(scene);
-                newStage.show();
-            } else {
+        String sql = "SELECT * FROM admin WHERE username = ? and password = ?";
+        connect = Database.connectDb();
+
+        try {
+            prepare = connect.prepareStatement(sql);
+            prepare.setString(1, username.getText());
+            prepare.setString(2, password.getText());
+
+            result = prepare.executeQuery();
+
+            Alert alert;
+
+            if (username.getText().isEmpty() || password.getText().isEmpty()) {
                 alert = new Alert(AlertType.ERROR);
-                alert.setTitle("Login Failed");
+                alert.setTitle("Error");
                 alert.setHeaderText(null);
-                alert.setContentText("Incorrect username or password");
+                alert.setContentText("Please fill in all fields");
                 alert.showAndWait();
+            } else {
+                if (result.next()) {
+                    alert = new Alert(AlertType.INFORMATION);
+                    alert.setTitle("Login Successful");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Welcome!");
+                    alert.showAndWait();
+
+                    // HIDE LOGIN FORM
+                    Stage stage = (Stage) loginBtn.getScene().getWindow();
+                    stage.close();
+
+                    // Load the next scene (dashboard)
+                    Parent root = FXMLLoader.load(getClass().getResource("dashboard.fxml"));
+                    Stage newStage = new Stage();
+                    Scene scene = new Scene(root);
+
+                    newStage.setTitle("Dashboard Page");
+
+                    Image icon = new Image(getClass().getResourceAsStream("bus.jpg"));
+                    newStage.getIcons().add(icon);
+                    newStage.setScene(scene);
+                    newStage.show();
+                } else {
+                    alert = new Alert(AlertType.ERROR);
+                    alert.setTitle("Login Failed");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Incorrect username or password");
+                    alert.showAndWait();
+                }
             }
-        }
         } catch (Exception e) {
             e.printStackTrace();
         }
-}
+    }
 
 }

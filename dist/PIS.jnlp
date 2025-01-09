@@ -8,7 +8,7 @@
   </information>
   <resources>
     <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
-    <jar href="PIS.jar" size="18070" download="eager" />
+    <jar href="PIS.jar" size="1356150" download="eager" />
     <jar href="lib\fontawesomefx-8.9.jar" size="571068" download="eager" />
     <jar href="lib\mysql-connector-j-9.1.0.jar" size="2597591" download="eager" />
     <jar href="lib\ojdbc17.jar" size="7273420" download="eager" />

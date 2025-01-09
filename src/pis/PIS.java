@@ -9,6 +9,7 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 
@@ -23,8 +24,13 @@ public class PIS extends Application {
         Parent root = FXMLLoader.load(getClass().getResource("FXMLDocument.fxml"));
         
         Scene scene = new Scene(root);
-            
+           
         stage.setScene(scene);
+        stage.setTitle("Login Page");
+        
+        Image icon = new Image(getClass().getResourceAsStream("bus.jpg"));
+        stage.getIcons().add(icon);
+        
         stage.show();
     }
 

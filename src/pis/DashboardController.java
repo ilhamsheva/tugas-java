@@ -138,43 +138,44 @@ public class DashboardController implements Initializable {
         loadTripsToComboBox();
         showDataTickets();
         initializeTicketsTable();
-        updateDashboard();
+        updateDashboard(true, true);
     }
 
     // Add Function
     public void addTrips() {
-        String sql = "INSERT INTO Trips (place) VALUES (?)";
+        String sql = "INSERT INTO Trips (id, place) VALUES (?, ?)";
 
         connect = Database.connectDb();
 
         try {
-            prepare = connect.prepareStatement(sql);
-
             if (textfield_place_trips.getText().isEmpty()) {
-                alert = new Alert(AlertType.ERROR);
+                alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Error Message");
                 alert.setHeaderText(null);
                 alert.setContentText("Please fill in the blank field.");
                 alert.showAndWait();
             } else {
-
-                prepare.setString(1, textfield_place_trips.getText());
+                int nextId = getNextAvailableId("Trips"); // Dapatkan ID berikutnya
+                prepare = connect.prepareStatement(sql);
+                prepare.setInt(1, nextId);
+                prepare.setString(2, textfield_place_trips.getText());
                 prepare.executeUpdate();
 
-                alert = new Alert(AlertType.INFORMATION);
+                alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Info Message");
                 alert.setHeaderText(null);
                 alert.setContentText("Successfully Added!");
                 alert.showAndWait();
 
-                // Clear text field after adding
+                // Bersihkan form
                 textfield_place_trips.clear();
 
-                // Refresh table data
+                // Refresh tabel
                 showDataTrips();
+                loadTripsToComboBox();
+                updateDashboard(false, true);
             }
-
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
@@ -355,16 +356,17 @@ public class DashboardController implements Initializable {
                 tripList.add(new Trip(result.getInt("id"), result.getString("place")));
             }
 
+            // Set data ke ComboBox
             textfield_from_tickets.setItems(tripList);
             textfield_to_trips.setItems(tripList);
 
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
     public void addTicket() {
-        String sql = "INSERT INTO Tickets (name, from_id, to_id) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO Tickets (id, name, from_id, to_id) VALUES (?, ?, ?, ?)";
 
         connect = Database.connectDb();
 
@@ -372,23 +374,24 @@ public class DashboardController implements Initializable {
             if (textfield_name_tickets.getText().isEmpty()
                     || textfield_from_tickets.getValue() == null
                     || textfield_to_trips.getValue() == null) {
-                alert = new Alert(AlertType.ERROR);
+                alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Error Message");
                 alert.setHeaderText(null);
                 alert.setContentText("Please fill in all fields.");
                 alert.showAndWait();
             } else {
+                int nextId = getNextAvailableId("Tickets"); // Dapatkan ID berikutnya
                 Trip fromTrip = textfield_from_tickets.getValue();
                 Trip toTrip = textfield_to_trips.getValue();
 
                 prepare = connect.prepareStatement(sql);
-                prepare.setString(1, textfield_name_tickets.getText());
-                prepare.setInt(2, fromTrip.getId());
-                prepare.setInt(3, toTrip.getId());
-
+                prepare.setInt(1, nextId); // Tetapkan ID
+                prepare.setString(2, textfield_name_tickets.getText());
+                prepare.setInt(3, fromTrip.getId());
+                prepare.setInt(4, toTrip.getId());
                 prepare.executeUpdate();
 
-                alert = new Alert(AlertType.INFORMATION);
+                alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Info Message");
                 alert.setHeaderText(null);
                 alert.setContentText("Successfully Added!");
@@ -397,9 +400,9 @@ public class DashboardController implements Initializable {
                 // Bersihkan form
                 clearTickets();
 
-                // Refresh tabel dan dashboard
+                // Refresh tabel
                 showDataTickets();
-                updateDashboard();
+                updateDashboard(true, false);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -574,41 +577,42 @@ public class DashboardController implements Initializable {
         }
     }
 
-    public void updateDashboard() {
-        // Hitung Total Passenger
-        String sqlPassenger = "SELECT COUNT(*) AS total FROM Tickets";
-        String sqlTrips = "SELECT COUNT(*) AS total FROM Trips";
+    public void updateDashboard(boolean updatePassengers, boolean updateTrips) {
+        connect = Database.connectDb();
 
         try {
-            connect = Database.connectDb();
-
             // Update Total Passenger
-            prepare = connect.prepareStatement(sqlPassenger);
-            result = prepare.executeQuery();
-            if (result.next()) {
-                card_TP.setText(String.valueOf(result.getInt("total")));
+            if (updatePassengers) {
+                String sqlPassenger = "SELECT COUNT(id) AS total FROM Tickets";
+                prepare = connect.prepareStatement(sqlPassenger);
+                result = prepare.executeQuery();
+                if (result.next()) {
+                    card_TP.setText(String.valueOf(result.getInt("total")));
+                }
+
+                // Update Line Chart for Passengers
+                updatePassengerChart();
             }
 
             // Update Total Trips
-            prepare = connect.prepareStatement(sqlTrips);
-            result = prepare.executeQuery();
-            if (result.next()) {
-                card_TT.setText(String.valueOf(result.getInt("total")));
+            if (updateTrips) {
+                String sqlTrips = "SELECT COUNT(id) AS total FROM Trips";
+                prepare = connect.prepareStatement(sqlTrips);
+                result = prepare.executeQuery();
+                if (result.next()) {
+                    card_TT.setText(String.valueOf(result.getInt("total")));
+                }
+
+                // Update Bar Chart for Trips
+                updateTripChart();
             }
-
-            // Update Bar Chart for Trips
-            updateTripChart();
-
-            // Update Line Chart for Passengers
-            updatePassengerChart();
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
     private void updateTripChart() {
-        String sql = "SELECT place, COUNT(*) AS total FROM Trips GROUP BY place";
+        String sql = "SELECT place, COUNT(id) AS total FROM Trips GROUP BY place";
 
         try {
             XYChart.Series<String, Number> tripSeries = new XYChart.Series<>();
@@ -630,7 +634,7 @@ public class DashboardController implements Initializable {
     }
 
     private void updatePassengerChart() {
-        String sql = "SELECT name, COUNT(*) AS total FROM Tickets GROUP BY name";
+        String sql = "SELECT name, COUNT(id) AS total FROM Tickets GROUP BY name";
 
         try {
             XYChart.Series<String, Number> passengerSeries = new XYChart.Series<>();
@@ -649,6 +653,24 @@ public class DashboardController implements Initializable {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    private int getNextAvailableId(String tableName) {
+        String sql = "SELECT COALESCE(MAX(id), 0) + 1 AS next_id FROM " + tableName;
+
+        try {
+            connect = Database.connectDb();
+            prepare = connect.prepareStatement(sql);
+            result = prepare.executeQuery();
+
+            if (result.next()) {
+                return result.getInt("next_id");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return 1; // Jika tabel kosong, mulai dari 1
     }
 
     // 1. Logout
