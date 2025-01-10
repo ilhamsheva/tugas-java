@@ -18,6 +18,7 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
@@ -131,7 +132,8 @@ public class DashboardController implements Initializable {
     private ObservableList<String> placeList;
 
     Alert alert;
-
+    
+    // Fungsi untuk inisialiasi fungsi
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         initializeTripsTable();
@@ -141,7 +143,7 @@ public class DashboardController implements Initializable {
         updateDashboard(true, true);
     }
 
-    // Add Function
+    // Add Function Trips
     public void addTrips() {
         String sql = "INSERT INTO Trips (id, place) VALUES (?, ?)";
 
@@ -179,7 +181,8 @@ public class DashboardController implements Initializable {
             e.printStackTrace();
         }
     }
-
+    
+    // Show data in Trips table
     public ObservableList<Trip> showDataTrips() {
         ObservableList<Trip> listData = FXCollections.observableArrayList();
 
@@ -205,6 +208,7 @@ public class DashboardController implements Initializable {
         return listData;
     }
 
+    // Update table in Trips
     public void updateTrips() {
         String sql = "UPDATE Trips SET place = ? WHERE id = ?";
 
@@ -234,6 +238,7 @@ public class DashboardController implements Initializable {
                 // Clear text field and refresh table
                 textfield_place_trips.clear();
                 showDataTrips();
+                updateDashboard(false, true);
             }
 
         } catch (Exception e) {
@@ -241,6 +246,7 @@ public class DashboardController implements Initializable {
         }
     }
 
+    // Delete in Trips table
     public void deleteTrips() {
         String sql = "DELETE FROM Trips WHERE id = ?";
 
@@ -267,6 +273,9 @@ public class DashboardController implements Initializable {
                     prepare.setInt(1, selectedTrip.getId());
                     prepare.executeUpdate();
 
+                    // Reindex table
+                    reindexTable("Trips");
+
                     alert = new Alert(AlertType.INFORMATION);
                     alert.setTitle("Info Message");
                     alert.setHeaderText(null);
@@ -276,6 +285,7 @@ public class DashboardController implements Initializable {
                     // Clear text field and refresh table
                     textfield_place_trips.clear();
                     showDataTrips();
+                    updateDashboard(false, true);
                 }
             }
 
@@ -284,11 +294,13 @@ public class DashboardController implements Initializable {
         }
     }
 
+    // Clear if cancel input
     public void clearTrips() {
         textfield_place_trips.clear();
         tabel_trips.getSelectionModel().clearSelection();
     }
-
+    
+    // Function 
     public void initializeTripsTable() {
         // Mengatur kolom di tabel Trips
         id_trips_tabel_trips.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -312,6 +324,7 @@ public class DashboardController implements Initializable {
 
     }
 
+    // Search in Trips table
     public void searchTrips() {
         String searchKeyword = search_trips.getText().toLowerCase();
 
@@ -342,6 +355,7 @@ public class DashboardController implements Initializable {
         }
     }
 
+    // Function for load place in Trips to Field Fron and To (Tickets)
     public void loadTripsToComboBox() {
         ObservableList<Trip> tripList = FXCollections.observableArrayList();
         String sql = "SELECT * FROM Trips";
@@ -489,6 +503,7 @@ public class DashboardController implements Initializable {
                 // Bersihkan form
                 clearTickets();
                 showDataTickets();
+                updateDashboard(true, false);
             }
 
         } catch (Exception e) {
@@ -522,6 +537,9 @@ public class DashboardController implements Initializable {
                     prepare.setInt(1, selectedTicket.getId());
                     prepare.executeUpdate();
 
+                    // Reindex table
+                    reindexTable("Tickets");
+
                     alert = new Alert(AlertType.INFORMATION);
                     alert.setTitle("Info Message");
                     alert.setHeaderText(null);
@@ -531,6 +549,7 @@ public class DashboardController implements Initializable {
                     // Bersihkan form
                     clearTickets();
                     showDataTickets();
+                    updateDashboard(true, false);
                 }
             }
 
@@ -673,6 +692,33 @@ public class DashboardController implements Initializable {
         return 1; // Jika tabel kosong, mulai dari 1
     }
 
+    public void reindexTable(String tableName) {
+        connect = Database.connectDb();
+
+        try {
+            Statement statement = connect.createStatement();
+
+            // Buat tabel sementara untuk menyimpan data dengan ID yang diurutkan ulang
+            String createTempTableSQL = "CREATE TEMPORARY TABLE temp_table AS "
+                    + "SELECT @row_number:=@row_number+1 AS new_id, id "
+                    + "FROM (SELECT @row_number:=0) AS init, " + tableName + " ORDER BY id ASC;";
+            statement.execute(createTempTableSQL);
+
+            // Perbarui ID di tabel asli menggunakan tabel sementara
+            String updateOriginalTableSQL = "UPDATE " + tableName + " t "
+                    + "JOIN temp_table temp ON t.id = temp.id "
+                    + "SET t.id = temp.new_id;";
+            statement.execute(updateOriginalTableSQL);
+
+            // Hapus tabel sementara
+            String dropTempTableSQL = "DROP TEMPORARY TABLE temp_table;";
+            statement.execute(dropTempTableSQL);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     // 1. Logout
     public void logout() {
         try {
@@ -691,6 +737,11 @@ public class DashboardController implements Initializable {
                 Scene scene = new Scene(root);
 
                 stage.setScene(scene);
+
+                stage.setTitle("Login Page");
+
+                Image icon = new Image(getClass().getResourceAsStream("bus.jpg"));
+                stage.getIcons().add(icon);
                 stage.show();
             }
 
