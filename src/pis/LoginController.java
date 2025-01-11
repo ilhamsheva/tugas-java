@@ -17,7 +17,7 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
-public class FXMLDocumentController {
+public class LoginController {
 
     @FXML
     private AnchorPane main_form;
