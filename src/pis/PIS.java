@@ -22,7 +22,11 @@ public class PIS extends Application {
        
     @Override
     public void start(Stage stage) throws Exception {
+<<<<<<< HEAD
         Parent root = FXMLLoader.load(getClass().getResource("Design/Login.fxml"));
+=======
+        Parent root = FXMLLoader.load(getClass().getResource("Login.fxml"));
+>>>>>>> 4c38661002152d6c0286e3932e1ed33b0d248e99
         
         Scene scene = new Scene(root);
            
