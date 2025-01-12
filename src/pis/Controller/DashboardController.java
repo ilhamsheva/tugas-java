@@ -1,4 +1,4 @@
-package pis;
+package pis.Controller;
 
 import java.net.URL;
 import java.sql.*;
@@ -21,6 +21,9 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import pis.Database.Database;
+import pis.Model.Ticket;
+import pis.Model.Trip;
 
 public class DashboardController implements Initializable {
 
@@ -132,10 +135,12 @@ public class DashboardController implements Initializable {
     private ObservableList<String> placeList;
 
     Alert alert;
-    
+
     // Fungsi untuk inisialiasi fungsi
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        searchTicket();
+        searchTrips();
         initializeTripsTable();
         loadTripsToComboBox();
         showDataTickets();
@@ -181,7 +186,7 @@ public class DashboardController implements Initializable {
             e.printStackTrace();
         }
     }
-    
+
     // Show data in Trips table
     public ObservableList<Trip> showDataTrips() {
         ObservableList<Trip> listData = FXCollections.observableArrayList();
@@ -248,7 +253,8 @@ public class DashboardController implements Initializable {
 
     // Delete in Trips table
     public void deleteTrips() {
-        String sql = "DELETE FROM Trips WHERE id = ?";
+        String deleteTripsSQL = "DELETE FROM Trips WHERE id = ?";
+        String deleteTicketsSQL = "DELETE FROM tickets WHERE to_id = ?";
 
         connect = Database.connectDb();
 
@@ -269,7 +275,13 @@ public class DashboardController implements Initializable {
                 Optional<ButtonType> option = confirmAlert.showAndWait();
 
                 if (option.get().equals(ButtonType.OK)) {
-                    prepare = connect.prepareStatement(sql);
+                    // Hapus data terkait di tabel tickets
+                    prepare = connect.prepareStatement(deleteTicketsSQL);
+                    prepare.setInt(1, selectedTrip.getId());
+                    prepare.executeUpdate();
+
+                    // Hapus data di tabel trips
+                    prepare = connect.prepareStatement(deleteTripsSQL);
                     prepare.setInt(1, selectedTrip.getId());
                     prepare.executeUpdate();
 
@@ -288,8 +300,7 @@ public class DashboardController implements Initializable {
                     updateDashboard(false, true);
                 }
             }
-
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
@@ -299,7 +310,7 @@ public class DashboardController implements Initializable {
         textfield_place_trips.clear();
         tabel_trips.getSelectionModel().clearSelection();
     }
-    
+
     // Function 
     public void initializeTripsTable() {
         // Mengatur kolom di tabel Trips
@@ -698,21 +709,29 @@ public class DashboardController implements Initializable {
         try {
             Statement statement = connect.createStatement();
 
-            // Buat tabel sementara untuk menyimpan data dengan ID yang diurutkan ulang
+            // Pastikan tabel tidak kosong
+            ResultSet rs = statement.executeQuery("SELECT COUNT(*) AS count FROM " + tableName);
+            if (rs.next() && rs.getInt("count") == 0) {
+                return; // Tidak perlu reindex jika tabel kosong
+            }
+
+            // Inisialisasi variabel row_number
+            statement.execute("SET @row_number = 0;");
+
+            // Buat tabel sementara
             String createTempTableSQL = "CREATE TEMPORARY TABLE temp_table AS "
                     + "SELECT @row_number:=@row_number+1 AS new_id, id "
-                    + "FROM (SELECT @row_number:=0) AS init, " + tableName + " ORDER BY id ASC;";
+                    + "FROM " + tableName + " ORDER BY id ASC;";
             statement.execute(createTempTableSQL);
 
-            // Perbarui ID di tabel asli menggunakan tabel sementara
+            // Update ID di tabel asli
             String updateOriginalTableSQL = "UPDATE " + tableName + " t "
                     + "JOIN temp_table temp ON t.id = temp.id "
                     + "SET t.id = temp.new_id;";
             statement.execute(updateOriginalTableSQL);
 
             // Hapus tabel sementara
-            String dropTempTableSQL = "DROP TEMPORARY TABLE temp_table;";
-            statement.execute(dropTempTableSQL);
+            statement.execute("DROP TEMPORARY TABLE temp_table;");
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -732,7 +751,7 @@ public class DashboardController implements Initializable {
                 logout.getScene().getWindow().hide();
 
                 // Redirect to login form
-                Parent root = FXMLLoader.load(getClass().getResource("FXMLDocument.fxml"));
+                Parent root = FXMLLoader.load(getClass().getResource("/pis/Design/Login.fxml"));
                 Stage stage = new Stage();
                 Scene scene = new Scene(root);
 
@@ -740,7 +759,7 @@ public class DashboardController implements Initializable {
 
                 stage.setTitle("Login Page");
 
-                Image icon = new Image(getClass().getResourceAsStream("bus.jpg"));
+                Image icon = new Image(getClass().getResourceAsStream("/pis/Assets/bus.jpg"));
                 stage.getIcons().add(icon);
                 stage.show();
             }

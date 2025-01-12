@@ -12,6 +12,7 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
+import pis.Controller.*;
 
 /**
  *
@@ -21,14 +22,14 @@ public class PIS extends Application {
        
     @Override
     public void start(Stage stage) throws Exception {
-        Parent root = FXMLLoader.load(getClass().getResource("FXMLDocument.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("Design/Login.fxml"));
         
         Scene scene = new Scene(root);
            
         stage.setScene(scene);
         stage.setTitle("Login Page");
         
-        Image icon = new Image(getClass().getResourceAsStream("bus.jpg"));
+        Image icon = new Image(getClass().getResourceAsStream("Assets/bus.jpg"));
         stage.getIcons().add(icon);
         
         stage.show();

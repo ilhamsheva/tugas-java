@@ -1,4 +1,4 @@
-package pis;
+package pis.Model;
 
 public class Ticket {
     private int id;

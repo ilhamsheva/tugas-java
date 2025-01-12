@@ -1,4 +1,4 @@
-package pis;
+package pis.Controller;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -16,8 +16,9 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import pis.Database.Database;
 
-public class FXMLDocumentController {
+public class LoginController {
 
     @FXML
     private AnchorPane main_form;
@@ -68,13 +69,13 @@ public class FXMLDocumentController {
                     stage.close();
 
                     // Load the next scene (dashboard)
-                    Parent root = FXMLLoader.load(getClass().getResource("dashboard.fxml"));
+                    Parent root = FXMLLoader.load(getClass().getResource("/pis/Design/dashboard.fxml"));
                     Stage newStage = new Stage();
                     Scene scene = new Scene(root);
 
                     newStage.setTitle("Dashboard Page");
 
-                    Image icon = new Image(getClass().getResourceAsStream("bus.jpg"));
+                    Image icon = new Image(getClass().getResourceAsStream("/pis/Assets/bus.jpg"));
                     newStage.getIcons().add(icon);
                     newStage.setScene(scene);
                     newStage.show();
