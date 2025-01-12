@@ -9,11 +9,7 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.text.Font?>
 
-<<<<<<<< HEAD:src/pis/Design/Login.fxml
 <StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pis.Controller.LoginController">
-========
-<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="pis.LoginController">
->>>>>>>> 4c38661002152d6c0286e3932e1ed33b0d248e99:src/pis/Login.fxml
    <children>
       <AnchorPane prefHeight="200.0" prefWidth="200.0">
          <children>
