@@ -559,7 +559,9 @@ public class DashboardController implements Initializable {
 
                     // Bersihkan form
                     clearTickets();
-                    showDataTickets();
+
+                    // Refresh tabel dan update ticketList
+                    ticketList = showDataTickets(); // Memperbarui ticketList
                     updateDashboard(true, false);
                 }
             }
@@ -578,12 +580,11 @@ public class DashboardController implements Initializable {
 
     public void searchTicket() {
         String searchKeyword = search_tickets.getText().toLowerCase(); // Ambil keyword pencarian dari TextField
-        ObservableList<Ticket> filteredList = FXCollections.observableArrayList();
 
-        // Periksa apakah daftar data sudah ada
-        if (ticketList == null) {
-            ticketList = showDataTickets(); // Muat data jika belum ada
-        }
+        // Periksa apakah data sudah ada
+        ticketList = showDataTickets(); // Memuat data terbaru setiap kali pencarian
+
+        ObservableList<Ticket> filteredList = FXCollections.observableArrayList();
 
         // Filter tiket berdasarkan nama atau lokasi asal/tujuan
         for (Ticket ticket : ticketList) {
@@ -715,23 +716,14 @@ public class DashboardController implements Initializable {
                 return; // Tidak perlu reindex jika tabel kosong
             }
 
-            // Inisialisasi variabel row_number
-            statement.execute("SET @row_number = 0;");
-
-            // Buat tabel sementara
-            String createTempTableSQL = "CREATE TEMPORARY TABLE temp_table AS "
-                    + "SELECT @row_number:=@row_number+1 AS new_id, id "
-                    + "FROM " + tableName + " ORDER BY id ASC;";
-            statement.execute(createTempTableSQL);
-
-            // Update ID di tabel asli
+            // Update ID di tabel asli dengan urutan baru
             String updateOriginalTableSQL = "UPDATE " + tableName + " t "
-                    + "JOIN temp_table temp ON t.id = temp.id "
+                    + "JOIN (SELECT id, @row_number := @row_number + 1 AS new_id "
+                    + "FROM (SELECT @row_number := 0) r, " + tableName + " "
+                    + "ORDER BY id ASC) AS temp ON t.id = temp.id "
                     + "SET t.id = temp.new_id;";
-            statement.execute(updateOriginalTableSQL);
 
-            // Hapus tabel sementara
-            statement.execute("DROP TEMPORARY TABLE temp_table;");
+            statement.execute(updateOriginalTableSQL);
 
         } catch (SQLException e) {
             e.printStackTrace();

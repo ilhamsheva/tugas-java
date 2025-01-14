@@ -14,6 +14,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import pis.Database.Database;
@@ -31,6 +33,23 @@ public class LoginController {
 
     @FXML
     private Button loginBtn;
+
+    @FXML
+    private void initialize() {
+        // Menambahkan event handler untuk TextField dan PasswordField
+        username.setOnKeyPressed(this::handleKeyPressed);
+        password.setOnKeyPressed(this::handleKeyPressed);
+    }
+
+    private void handleKeyPressed(KeyEvent event) {
+        if (event.getCode() == KeyCode.ENTER) {
+            try {
+                login(); // Panggil metode login ketika Enter ditekan
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     // Database Tools
     private Connection connect;
